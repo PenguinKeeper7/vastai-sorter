@@ -1,57 +1,84 @@
 import requests
+import urllib.parse
+import json
 
-#api_url = "https://cloud.vast.ai/api/v0/bundles/"
-api_url_noDC = "https://cloud.vast.ai/api/v0/bundles/?q=%7B%22disk_space%22%3A%7B%22gte%22%3A16%7D%2C%22duration%22%3A%7B%22gte%22%3A262144%7D%2C%22datacenter%22%3A%7B%22eq%22%3Afalse%7D%2C%22verified%22%3A%7B%22eq%22%3Atrue%7D%2C%22rentable%22%3A%7B%22eq%22%3Atrue%7D%2C%22sort_option%22%3A%7B%220%22%3A%5B%22score%22%2C%22desc%22%5D%7D%2C%22order%22%3A%5B%5B%22score%22%2C%22desc%22%5D%5D%2C%22num_gpus%22%3A%7B%22gte%22%3A0%2C%22lte%22%3A16%7D%2C%22allocated_storage%22%3A16%2C%22limit%22%3A6400000%2C%22extra_ids%22%3A%5B%5D%2C%22type%22%3A%22ask%22%7D"
-api_url_DC =   "https://cloud.vast.ai/api/v0/bundles/?q=%7B%22disk_space%22%3A%7B%22gte%22%3A16%7D%2C%22duration%22%3A%7B%22gte%22%3A262144%7D%2C%22datacenter%22%3A%7B%22eq%22%3Atrue%7D%2C%22verified%22%3A%7B%22eq%22%3Atrue%7D%2C%22rentable%22%3A%7B%22eq%22%3Atrue%7D%2C%22sort_option%22%3A%7B%220%22%3A%5B%22score%22%2C%22desc%22%5D%7D%2C%22order%22%3A%5B%5B%22score%22%2C%22desc%22%5D%5D%2C%22num_gpus%22%3A%7B%22gte%22%3A0%2C%22lte%22%3A16%7D%2C%22allocated_storage%22%3A16%2C%22limit%22%3A6400000%2C%22extra_ids%22%3A%5B%5D%2C%22type%22%3A%22ask%22%7D"
+queryString = {
+    "disk_space": {"gte": 16},
+    "duration": {"gte": 262144},
+    "datacenter": {"eq": False},
+    "verified": {"eq": True},
+    "rentable": {"eq": True},
+    "sort_option": {"0": ["dlperf_per_dphtotal", "desc"]},
+    "order": [["dlperf_per_dphtotal", "desc"]],
+    "num_gpus": {"gte": 0, "lte": 1000000},
+    "allocated_storage": 16,
+    "cuda_max_good": {"gte": "11.8"},
+    "cpu_arch": {"in": ["amd64"]},
+    "limit": 1000000,
+    "extra_ids": [],
+    "type": "ask"
+}
 
 # MD5 hashrate in H/s. "-1" = unknown/unsupported
 # https://docs.google.com/spreadsheets/d/1tzmCx8TX3208lO0dY91YJuS9EmUictUnONGDM7snIHU/edit#gid=0
 
 hashrateTable = {
-    "A10":          45785700000,
-    "A100 PCIE":    64935200000,
-    "A100 SXM4":    65855800000,
-    "A100X":        52693600000,
-    "A40":          64565900000,
-    "GH200 SXM":    -1,
-    "GTX 1080 Ti":  35255900000,
-    "H100 PCIE":    87530600000,
-    "H100 SXM":     116500000000,
-    "L40":          39827900000,
-    "L40S":         -1,
-    "GTX 1060":     11560200000,
-    "RTX 2070S":    30197000000,
-    "RTX 2080 Ti":  52990500000,
-    "RTX 3060":     25021200000,
-    "RTX 3060 Ti":  32061800000,
-    "RTX 3070":     38807400000,
-    "RTX 3070 Ti":  43319600000,
-    "RTX 3080":     54033100000,
-    "RTX 3080 Ti":  66673100000,
-    "RTX 3090":     65079100000,
-    "RTX 3090 Ti":  79738800000,
-    "RTX 4060 Ti":  41451300000,
-    "RTX 4070":     28582100000,
-    "RTX 4070 Ti":  67809500000,
-    "RTX 4070S Ti": -1,
-    "RTX 4080":     98262800000,
-    "RTX 4080S":    95465600000,
-    "RTX 4090":     164100000000,
-    "RTX 5000Ada":  -1,
-    "RTX 6000Ada":  130200000000,
-    "RTX A2000":    17261700000,
-    "RTX A4000":    25307200000,
-    "RTX A5000":    39590800000,
-    "RTX A6000":    68198700000,
-    "Tesla P100":   27159500000,
-    "Tesla V100":   56376200000,
-    "Titan V":      -1,
-    "Titan RTX":    61931600000,
-    "Q RTX 8000":   52298000000,
+    "A10":              45785700000,
+    "A100 PCIE":        64935200000,
+    "A100 SXM4":        65855800000,
+    "A100X":            52693600000,
+    "A40":              64565900000,
+    "GH200 SXM":        -1,
+    "GTX 1080 Ti":      35255900000,
+    "H100 PCIE":        87530600000,
+    "H100 SXM":         116500000000,
+    "L40":              39827900000,
+    "L40S":             -1,
+    "GTX 1050 Ti":      6536100000,
+    "GTX 1060":         11560200000,
+    "GTX 1070":         17907600000,
+    "GTX 1070 Ti":      23729300000,
+    "GTX 1080":         25114100000,
+    "GTX 1660 S":       17956000000,
+    "GTX 1660 Ti":      18939000000,
+    "RTX 2060":         24005900000,
+    "RTX 2060S":        28847300000,
+    "RTX 2070S":        30197000000,
+    "RTX 2080 Ti":      52990500000,
+    "RTX 3060":         25021200000,
+    "RTX 3060 laptop":  -1,
+    "RTX 3060 Ti":      32061800000,
+    "RTX 3070":         38807400000,
+    "RTX 3070 Ti":      43319600000,
+    "RTX 3080":         54033100000,
+    "RTX 3080 Ti":      66673100000,
+    "RTX 3090":         65079100000,
+    "RTX 3090 Ti":      79738800000,
+    "RTX 4060 Ti":      41451300000,
+    "RTX 4070":         28582100000,
+    "RTX 4070S":        -1,
+    "RTX 4070 Ti":      67809500000,
+    "RTX 4070S Ti":     -1,
+    "RTX 4080":         98262800000,
+    "RTX 4080S":        95465600000,
+    "RTX 4090":         164100000000,
+    "RTX 4000Ada":      -1,
+    "RTX 5000Ada":      -1,
+    "RTX 6000Ada":      130200000000,
+    "RTX A2000":        17261700000,
+    "RTX A4000":        25307200000,
+    "RTX A5000":        39590800000,
+    "RTX A6000":        68198700000,
+    "Tesla P40":        -1,
+    "Tesla P100":       27159500000,
+    "Tesla V100":       56376200000,
+    "Titan V":          -1,
+    "Titan RTX":        61931600000,
+    "Q RTX 8000":       52298000000,
 }
 
 # Easily filterable/searchable GPUs in vast
-# Any that aren't on this list need to be accessed through the API rather than the website (stupidly)
+# Any that aren't on this list may need to be accessed through the API rather than the website (stupidly)
 searchable_gpus = {
     "H100 PCIE",
     "H100 SXM",
@@ -94,9 +121,9 @@ parser.add_argument("--datacentre", help="Only show datacentre-hosted instances 
 args = parser.parse_args()
 
 if (args.datacentre == 'true'):
-    request = requests.get(api_url_DC)
-else:
-    request = requests.get(api_url_noDC)
+    queryString.datacenter["eq"] = True
+
+request = requests.get(f"https://cloud.vast.ai/api/v0/bundles/?q={urllib.parse.quote(json.dumps(queryString))}")
 
 if (request.status_code != 200):
     print(f"Failed to get the API data! HTTP: {request.status_code}")
