@@ -16,7 +16,7 @@ queryString = {
     "cpu_arch": {"in": ["amd64"]},
     "limit": 1000000,
     "extra_ids": [],
-    "type": "ask"
+    "type": "ask" # Default to on-demand
 }
 
 # MD5 hashrate in H/s. "-1" = unknown/unsupported
@@ -43,6 +43,7 @@ hashrateTable = {
     "GTX 1660 Ti":      18939000000,
     "RTX 2060":         24005900000,
     "RTX 2060S":        28847300000,
+    "RTX 2070":         26928400000,
     "RTX 2070S":        30197000000,
     "RTX 2080 Ti":      52990500000,
     "RTX 3060":         25021200000,
@@ -115,13 +116,19 @@ parser.add_argument("--hashrate-max", help="Set the maximum hashrate (GH/s)", de
 parser.add_argument("--cost-min", help="Set the minimum cost per hour ($/hr)", default = 0, type=int)
 parser.add_argument("--cost-max", help="Set the maximum cost per ($/hr)", default = 10**10, type=int)
 parser.add_argument("--instances", help="Set the amount of instances to show", default = 15, type=int)
-parser.add_argument("--all-instances", help="Show instances that are hard to find on the website (Default: False)", default = "false", type=str.lower) # argparse doesn't handle bools well
-parser.add_argument("--datacentre", help="Only show datacentre-hosted instances (Default: False)", default = "false", type=str.lower) # argparse doesn't handle bools well
+parser.add_argument("--all-instances", help="Show instances that are hard to find on the website too (Default: False)", action='store_false', default=False)
+parser.add_argument("--interruptible", help="Set the type of instance to interruptible (Default: False)", action='store_true', default=False)
+parser.add_argument("--datacentre", help="Only show datacentre-hosted instances (Default: False)", action='store_true', default=False)
+parser.add_argument("--unverified", help="Only show datacentre-hosted instances (Default: False)", action='store_true', default=False)
 
 args = parser.parse_args()
 
-if (args.datacentre == 'true'):
-    queryString.datacenter["eq"] = True
+queryString["datacenter"]["eq"] = args.datacentre
+
+queryString["verified"]["eq"] != args.unverified
+
+if(args.interruptible == True):
+    queryString["type"] = "bid"
 
 request = requests.get(f"https://cloud.vast.ai/api/v0/bundles/?q={urllib.parse.quote(json.dumps(queryString))}")
 
@@ -139,7 +146,7 @@ for instance in instances:
         print(f'Unknown GPU: {instance["gpu_name"]}')
         continue
 
-    if (((instance["gpu_name"] in searchable_gpus) or (args.all_instances == "true")) == False):
+    if (((instance["gpu_name"] in searchable_gpus) or (args.all_instances == True)) == False):
         continue
 
     if (hashrateTable[instance["gpu_name"]] != -1):
