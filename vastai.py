@@ -10,11 +10,9 @@ queryString = {
     "rentable": {"eq": True},
     "sort_option": {"0": ["dlperf_per_dphtotal", "desc"]},
     "order": [["dlperf_per_dphtotal", "desc"]],
-    "num_gpus": {"gte": 0, "lte": 1000000},
     "allocated_storage": 16,
-    "cuda_max_good": {"gte": "11.8"},
-    "cpu_arch": {"in": ["amd64"]},
-    "limit": 1000000,
+    #"cuda_max_good": {"gte": "11.8"},
+    "limit": 5000,
     "extra_ids": [],
     "type": "ask" # Default to on-demand
 }
@@ -28,12 +26,12 @@ hashrateTable = {
     "A100 SXM4":        65855800000,
     "A100X":            52693600000,
     "A40":              64565900000,
-    "GH200 SXM":        -1,
+    "GH200 SXM":        120300000000,
     "GTX 1080 Ti":      35255900000,
     "H100 PCIE":        87530600000,
     "H100 SXM":         116500000000,
     "L40":              39827900000,
-    "L40S":             -1,
+    "L40S":             150100000000,
     "GTX 1050 Ti":      6536100000,
     "GTX 1060":         11560200000,
     "GTX 1070":         17907600000,
@@ -41,6 +39,7 @@ hashrateTable = {
     "GTX 1080":         25114100000,
     "GTX 1660 S":       17956000000,
     "GTX 1660 Ti":      18939000000,
+    "Radeon Pro VII":	32653900000,
     "RTX 2060":         24005900000,
     "RTX 2060S":        28847300000,
     "RTX 2070":         26928400000,
@@ -55,27 +54,33 @@ hashrateTable = {
     "RTX 3080 Ti":      66673100000,
     "RTX 3090":         65079100000,
     "RTX 3090 Ti":      79738800000,
+    "RTX 4060":			30527700000,
     "RTX 4060 Ti":      41451300000,
     "RTX 4070":         28582100000,
     "RTX 4070S":        -1,
     "RTX 4070 Ti":      67809500000,
-    "RTX 4070S Ti":     -1,
+    "RTX 4070S Ti":     82304600000,
     "RTX 4080":         98262800000,
     "RTX 4080S":        95465600000,
     "RTX 4090":         164100000000,
-    "RTX 4000Ada":      -1,
-    "RTX 5000Ada":      -1,
+    "RTX 4000Ada":      48276200000,
+    "RTX 5000Ada":      105100000000,
     "RTX 6000Ada":      130200000000,
     "RTX A2000":        17261700000,
     "RTX A4000":        25307200000,
     "RTX A5000":        39590800000,
     "RTX A6000":        68198700000,
+    "RX 7900 GRE":		52621600000,
+    "RX 7900 XTX":		-1,
+    "Tesla K80":		-1,
     "Tesla P40":        -1,
     "Tesla P100":       27159500000,
     "Tesla V100":       56376200000,
-    "Titan V":          -1,
+    "Titan V":          50557600000,
     "Titan RTX":        61931600000,
+    "Q RTX 4000":		-1,
     "Q RTX 8000":       52298000000,
+    "Quadro P6000":		29579000000
 }
 
 # Easily filterable/searchable GPUs in vast
@@ -105,7 +110,7 @@ searchable_gpus = {
     "RTX 3070",
     "RTX 3060",
     "Q RTX 8000",
-    "Tesla V100"    
+    "Tesla V100"
 }
 
 import argparse
@@ -125,7 +130,7 @@ args = parser.parse_args()
 
 queryString["datacenter"]["eq"] = args.datacentre
 
-queryString["verified"]["eq"] != args.unverified
+queryString["verified"]["eq"] = not args.unverified
 
 if(args.interruptible == True):
     queryString["type"] = "bid"
@@ -134,6 +139,7 @@ request = requests.get(f"https://cloud.vast.ai/api/v0/bundles/?q={urllib.parse.q
 
 if (request.status_code != 200):
     print(f"Failed to get the API data! HTTP: {request.status_code}")
+    print("Try again in a few seconds/minutes")
     exit(1)
 
 instances = request.json()["offers"]
@@ -141,7 +147,6 @@ instances = request.json()["offers"]
 machines = {}
 
 for instance in instances:
-
     if (instance["gpu_name"] not in hashrateTable):
         print(f'Unknown GPU: {instance["gpu_name"]}')
         continue
