@@ -11,7 +11,6 @@ queryString = {
     "sort_option": {"0": ["dlperf_per_dphtotal", "desc"]},
     "order": [["dlperf_per_dphtotal", "desc"]],
     "allocated_storage": 16,
-    #"cuda_max_good": {"gte": "11.8"},
     "limit": 5000,
     "extra_ids": [],
     "type": "ask" # Default to on-demand
@@ -22,6 +21,7 @@ queryString = {
 
 hashrateTable = {
     "A10":              45785700000,
+    "A16":              7804300000,
     "A100 PCIE":        64935200000,
     "A100 SXM4":        65855800000,
     "A100X":            52693600000,
