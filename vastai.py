@@ -78,7 +78,7 @@ hashrateTable = {
     "RX 7900 GRE":		52621600000,
     "RX 7900 XTX":		-1,
     "Tesla K80":		-1,
-    "Tesla P40":        -1,
+    "Tesla P40":        292757100000,
     "Tesla P100":       27159500000,
     "Tesla V100":       56376200000,
     "Titan V":          50557600000,
