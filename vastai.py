@@ -6,6 +6,7 @@ queryString = {
     "disk_space": {"gte": 16},
     "duration": {"gte": 262144},
     "datacenter": {"eq": False},
+    "show_incompatible": {"eq": False},
     "verified": {"eq": True},
     "rentable": {"eq": True},
     "sort_option": {"0": ["dlperf_per_dphtotal", "desc"]},
@@ -134,12 +135,15 @@ parser.add_argument("--all-instances", help="Show instances that are hard to fin
 parser.add_argument("--interruptible", help="Set the type of instance to interruptible (Default: False)", action='store_true', default=False)
 parser.add_argument("--datacentre", help="Only show datacentre-hosted instances (Default: False)", action='store_true', default=False)
 parser.add_argument("--unverified", help="Only show datacentre-hosted instances (Default: False)", action='store_true', default=False)
+parser.add_argument("--incompatible", help="Show instances listed as \"Incompatible\" on vast.ai (Default: False)", action='store_true', default=False)
 
 args = parser.parse_args()
 
 queryString["datacenter"]["eq"] = args.datacentre
 
 queryString["verified"]["eq"] = not args.unverified
+
+queryString["show_incompatible"]["eq"] = args.incompatible
 
 if(args.interruptible == True):
     queryString["type"] = "bid"
