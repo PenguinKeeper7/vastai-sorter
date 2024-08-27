@@ -6,7 +6,7 @@ Sort instances based on Hashcat price-to-hashrate. Tested on Python 3.8.10.
 $ python3 vastai.py --help
 usage: vast.ai [-h] [--hashrate-min HASHRATE_MIN] [--hashrate-max HASHRATE_MAX] [--cost-min COST_MIN]
                [--cost-max COST_MAX] [--instances INSTANCES] [--all-instances] [--interruptible] [--datacentre]
-               [--unverified]
+               [--unverified] [--incompatible]
 
 An application to guess the most price-effective vast.ai instance for Hashcat, based on MD5 benchmark speeds.
 
@@ -24,6 +24,7 @@ optional arguments:
   --interruptible       Set the type of instance to interruptible (Default: False)
   --datacentre          Only show datacentre-hosted instances (Default: False)
   --unverified          Only show datacentre-hosted instances (Default: False)
+  --incompatible        Show instances listed as "Incompatible" on vast.ai (Default: False)
 
 If instances aren't showing up in the GUI, make sure you scroll to the bottom and click "Show More"
 ```
