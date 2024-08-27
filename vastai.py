@@ -5,8 +5,6 @@ import json
 queryString = {
     "disk_space": {"gte": 16},
     "duration": {"gte": 262144},
-    "datacenter": {"eq": False},
-    "show_incompatible": {"eq": False},
     "verified": {"eq": True},
     "rentable": {"eq": True},
     "sort_option": {"0": ["dlperf_per_dphtotal", "desc"]},
@@ -29,6 +27,7 @@ hashrateTable = {
     "A40":              64565900000,
     "GH200 SXM":        120300000000,
     "GTX 1080 Ti":      35255900000,
+    "H100 NVL":         107900000000,
     "H100 PCIE":        87530600000,
     "H100 SXM":         116500000000,
 	"L4":				40469400000,
@@ -97,36 +96,6 @@ hashrateTable = {
     "Quadro P6000":		29579000000
 }
 
-# Easily filterable/searchable GPUs in vast
-# Any that aren't on this list may need to be accessed through the API rather than the website (stupidly)
-searchable_gpus = {
-    "H100 PCIE",
-    "H100 SXM",
-    "L40"
-    "RTX 6000Ada",
-    "RTX 4090",
-    "RTX 4080",
-    "RTX 4080 S",
-    "RTX 4070",
-    "A100 PCIE",
-    "A100 SXM4",
-    "A100X",
-    "A40",
-    "A10",
-    "RTX A6000",
-    "RTX A5000",
-    "RTX A4000",
-    "RTX 3090",
-    "RTX 5000Ada",
-    "RTX 3090 Ti",
-    "RTX 3080 Ti",
-    "RTX 3080",
-    "RTX 3070",
-    "RTX 3060",
-    "Q RTX 8000",
-    "Tesla V100"
-}
-
 import argparse
 
 parser = argparse.ArgumentParser(prog='vast.ai', description="An application to guess the most price-effective vast.ai instance for Hashcat, based on MD5 benchmark speeds.", epilog="If instances aren't showing up in the GUI, make sure you scroll to the bottom and click \"Show More\"")
@@ -135,7 +104,6 @@ parser.add_argument("--hashrate-max", help="Set the maximum hashrate (GH/s)", de
 parser.add_argument("--cost-min", help="Set the minimum cost per hour ($/hr)", default = 0, type=int)
 parser.add_argument("--cost-max", help="Set the maximum cost per ($/hr)", default = 10**10, type=int)
 parser.add_argument("--instances", help="Set the amount of instances to show", default = 15, type=int)
-parser.add_argument("--all-instances", help="Show instances that are hard to find on the website too (Default: False)", action='store_false', default=False)
 parser.add_argument("--interruptible", help="Set the type of instance to interruptible (Default: False)", action='store_true', default=False)
 parser.add_argument("--datacentre", help="Only show datacentre-hosted instances (Default: False)", action='store_true', default=False)
 parser.add_argument("--unverified", help="Only show datacentre-hosted instances (Default: False)", action='store_true', default=False)
@@ -143,11 +111,17 @@ parser.add_argument("--incompatible", help="Show instances listed as \"Incompati
 
 args = parser.parse_args()
 
-queryString["datacenter"]["eq"] = args.datacentre
+if(args.datacentre):
+    queryString["datacenter"] = {}
+    queryString["datacenter"]["eq"] = args.datacentre
 
-queryString["verified"]["eq"] = not args.unverified
+if(args.datacentre):
+    queryString["verified"] = {}
+    queryString["verified"]["eq"] = not args.unverified
 
-queryString["show_incompatible"]["eq"] = args.incompatible
+if(args.datacentre):
+    queryString["show_incompatible"] = {}
+    queryString["show_incompatible"]["eq"] = args.incompatible
 
 if(args.interruptible == True):
     queryString["type"] = "bid"
@@ -166,9 +140,6 @@ machines = {}
 for instance in instances:
     if (instance["gpu_name"] not in hashrateTable):
         print(f'Unknown GPU: {instance["gpu_name"]}')
-        continue
-
-    if (((instance["gpu_name"] in searchable_gpus) or (args.all_instances == True)) == False):
         continue
 
     if (hashrateTable[instance["gpu_name"]] != -1):
